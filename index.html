@@ -1,10 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Budget App</title>  
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Budget App</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+  <link rel="stylesheet" href="index.css">
 </head>
-<body>    
+
+<body>
+  <div id="header">
+    <h1>
+      Home - <span id="currentDate"></span>
+    </h1>
+    <!-- navbar -->
+    <div id="header-buttons">
+      <button class="header-button" onclick="window.location.href = 'index.html'">Home</button>
+      <button class="header-button" onclick="window.location.href = 'budgets.html'">Set Budgets</button>
+      <button class="header-button" onclick="window.location.href = 'subscriptions.html'">Subscriptions</button>
+      <button class="header-button" onclick="window.location.href = 'settings.html'">Settings</button>
+    </div>
+  </div>
+  
+  <!-- adding an expense -->
+  <div class="container">
+    <div class="left-panel">
+      <div class="form-row">
+        <div>
+          <label for="amount">Amount (£)</label>
+          <input type="number" id="amount" min="0.01" step="0.01" value="0.00"/>
+        </div>
+        <div>
+          <label for="category">Category</label>
+          <select id="category">
+            <option value="Mortgage / Rent">Mortgage / Rent</option>
+            <option value="Groceries & Food">Groceries & Food</option>
+            <option value="Bills">Bills</option>
+            <option value="Transport">Transport</option>
+            <option value="Health & Fitness">Health & Fitness</option>
+            <option value="Childcare">Childcare</option>
+            <option value="Education">Education</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Savings">Savings</option>
+            <option value="Travel">Travel</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <button onclick="addExpense()">Add Expense</button>
+        </div>
+      </div>
+
+      <!-- optional note -->
+      <div class="note-row">
+        <label for="note">Note (optional)</label>
+        <input type="text" id="note" placeholder="e.g. Coffee"/>
+      </div>
+
+      <div class="budget-overview" id="budgetOverview"></div>
+    </div>
+
+    <div class="right-panel">
+      <div id="expenseList"></div>
+    </div>
+  </div>
+  
+  <!-- javascript -->
+  <script>
+    // store in memory
+    let categoryLimits = {};
+    let expenses = [];
+
+    // load values
+    function loadBudgets() {
+      const saved = localStorage.getItem("budgets");
+      if (saved) {
+        categoryLimits = JSON.parse(saved);
+      }
+    }
+
+    function loadExpenses() {
+      const saved = localStorage.getItem("expenses");
+      if (saved) {
+        expenses = JSON.parse(saved);
+      }
+    }
+
+    // save values
+    function saveExpenses() {
+      localStorage.setItem("expenses", JSON.stringify(expenses));
+    }
+
+    // add expense
+    function addExpense() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const category = document.getElementById("category").value;
+      const note = document.getElementById("note").value.trim();
+
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+
+      const timestamp = new Date().toISOString();
+      expenses.push({ amount, category, note, timestamp });
+      saveExpenses();
+
+      document.getElementById("amount").value = "0.00";
+      document.getElementById("note").value = "";
+
+      renderExpenses();
+      renderBudgetOverview();
+    }
+
+    // delete expense
+    function deleteExpense(timestamp) {
+      expenses = expenses.filter(exp => exp.timestamp !== timestamp);
+      saveExpenses();
+      renderExpenses();
+      renderBudgetOverview();
+    }
+
+    // display list 
+    function renderExpenses() {
+      const list = document.getElementById("expenseList");
+
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const now = new Date();
+      const currentMonthName = monthNames[now.getMonth()];
+
+      list.innerHTML = `<h3>Payment History - ${currentMonthName}</h3>`;
+
+      if (expenses.length === 0) {
+        list.innerHTML += `<p style="color: #888;">Add a purchase to see history</p>`;
+        return;
+      }
+
+      const sortedExpenses = [...expenses].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      sortedExpenses.forEach((expense) => {
+        const date = new Date(expense.timestamp);
+        const formattedDate = date.toLocaleString();
+
+        list.innerHTML += `
+          <div class="expense">
+            <div class="expense-top">
+              <div class="expense-category-note">
+                <strong>${expense.category}</strong>
+                ${expense.note ? `<small>${expense.note}</small>` : ""}
+              </div>
+              <div>
+                £${expense.amount.toFixed(2)}<br/>
+                <small>${formattedDate}</small>
+              </div>
+            </div>
+            <span class="delete-btn" onclick="deleteExpense('${expense.timestamp}')">&times;</span>
+          </div>
+        `;
+      });
+    }
+
+    // showing the spending/budget overview
+    function renderBudgetOverview() {
+      const totals = {};
+      expenses.forEach(exp => {
+        totals[exp.category] = (totals[exp.category] || 0) + exp.amount;
+      });
+
+      const overview = document.getElementById("budgetOverview");
+      overview.innerHTML = `
+        <h3>Overview</h3>
+        <div class="overview-header">
+          <span>Category</span>
+          <span>Spent / Budget</span>
+          <span>Warning</span>
+        </div>
+      `;
+
+      const categories = Object.keys(categoryLimits);
+      if (categories.length === 0) {
+        overview.innerHTML += `<p style="color: #888;">Set your budgets to see overview</p>`;
+        return;
+      }
+
+      categories.forEach(category => {
+        const spent = totals[category] || 0;
+        const budget = categoryLimits[category];
+        let warningClass = "";
+        let warningText = "";
+
+        if (budget === 0) {
+          warningClass = "no-budget";
+          warningText = "No budget set";
+        } else if (spent > budget) {
+          warningClass = "over-budget";
+          warningText = "Over budget!";
+        }
+
+        overview.innerHTML += `
+          <div>
+            <span>${category}</span>
+            <span>£${spent.toFixed(2)} / £${budget.toFixed(2)}</span>
+            <span class="budget-warning ${warningClass}">${warningText}</span>
+          </div>
+        `;
+      });
+    }
+
+    // the header date
+    function renderDate() {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()); 
+
+  document.getElementById("currentDate").textContent = `${day}/${month}/${year}`;
+}
+
+    loadExpenses();
+    renderExpenses();
+    loadBudgets();
+    renderBudgetOverview();
+    renderDate();
+  </script>
 </body>
 </html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Subscriptions</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="subscriptions.css">
+</head>
+<body>
+
+  <div id="header">
+    <h1>Subscriptions</h1>
+    <!-- navbar -->
+    <div id="header-buttons">
+      <button class="header-button" onclick="window.location.href='index.html'">Home</button>
+      <button class="header-button" onclick="window.location.href='budgets.html'">Set Budgets</button>
+      <button class="header-button active">Subscriptions</button>
+      <button class="header-button" onclick="window.location.href='settings.html'">Settings</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="form-row">
+      <div>
+        <!-- adding a category -->
+        <label for="subscriptionName">Name</label>
+        <input type="text" id="subscriptionName" placeholder="e.g. Netflix" autocomplete="off" />
+      </div>
+      <div>
+        <label for="subscriptionCategory">Category</label>
+        <select id="subscriptionCategory" autocomplete="off">
+          <option value="Mortgage / Rent">Mortgage / Rent</option>
+          <option value="Groceries & Food">Groceries & Food</option>
+          <option value="Bills">Bills</option>
+          <option value="Transport">Transport</option>
+          <option value="Health & Fitness">Health & Fitness</option>
+          <option value="Childcare">Childcare</option>
+          <option value="Education">Education</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Savings">Savings</option>
+          <option value="Travel">Travel</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="amount">Amount (£)</label>
+        <input type="number" id="amount" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div>
+        <label for="paymentDay">Payment Day (1-31)</label>
+        <input type="number" id="paymentDay" min="1" max="31" autocomplete="off" />
+      </div>
+      <div>
+        <button class="action-button" onclick="addSubscription()">Add Subscription</button>
+      </div>
+    </div>
+
+    <div class="subscription-list" id="subscriptionList">
+      <p class="no-subscriptions">No subscriptions added yet.</p>
+    </div>
+  </div>
+
+  <!-- javascript -->
+  <script>
+    let subscriptions = [];
+
+    // load
+    function loadSubscriptions() {
+      const saved = localStorage.getItem("subscriptions");
+      if (saved) {
+        subscriptions = JSON.parse(saved);
+      }
+    }
+
+    // save
+    function saveSubscriptions() {
+      localStorage.setItem("subscriptions", JSON.stringify(subscriptions));
+    }
+
+    function addSubscription() {
+      const nameInput = document.getElementById("subscriptionName");
+      const categoryInput = document.getElementById("subscriptionCategory");
+      const amountInput = document.getElementById("amount");
+      const dayInput = document.getElementById("paymentDay");
+
+      const name = nameInput.value.trim();
+      const category = categoryInput.value;
+      const amount = parseFloat(amountInput.value);
+      const day = parseInt(dayInput.value);
+
+      if (!name) {
+        alert("Please enter a subscription name.");
+        return;
+      }
+
+      if (isNaN(amount) || amount < 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+
+      if (isNaN(day) || day < 1 || day > 31) {
+        alert("Please enter a valid payment day between 1 and 31.");
+        return;
+      }
+
+      subscriptions.push({ name, category, amount, day });
+      // order sorting
+      subscriptions.sort((a, b) => a.day - b.day);
+      saveSubscriptions();
+      renderSubscriptions();
+
+      nameInput.value = "";
+      amountInput.value = "";
+      dayInput.value = "";
+      categoryInput.selectedIndex = 0;
+    }
+
+    function renderSubscriptions() {
+      const list = document.getElementById("subscriptionList");
+      list.innerHTML = "";
+
+      if (subscriptions.length === 0) {
+        list.innerHTML = '<p class="no-subscriptions">No subscriptions added yet.</p>';
+        return;
+      }
+
+      subscriptions.forEach((sub, index) => {
+        const div = document.createElement("div");
+        div.className = "subscription-item";
+        div.innerHTML = `
+          <div><strong>${sub.name}</strong></div>
+          <div>${sub.category}</div>
+          <div>£${sub.amount.toFixed(2)}</div>
+          <div>Payment Day: ${sub.day}</div>
+          <div>
+            <button class="remove-btn" onclick="removeSubscription(${index})" aria-label="Remove subscription">&times;</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function removeSubscription(index) {
+      subscriptions.splice(index, 1);
+      saveSubscriptions();
+      renderSubscriptions();
+    }
+
+    loadSubscriptions();
+    renderSubscriptions();
+  </script>
+</body>
+</html>

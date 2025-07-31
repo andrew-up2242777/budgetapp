@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Set Budgets</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="budgets.css">
+</head>
+<body>
+
+  
+  <div id="header">
+    <h1>Set Budgets</h1>
+    <!-- navbar -->
+    <div id="header-buttons">
+      <button class="header-button" onclick="window.location.href = 'index.html'">Home</button>
+      <button class="header-button active">Set Budgets</button>
+      <button class="header-button" onclick="window.location.href = 'subscriptions.html'">Subscriptions</button>
+      <button class="header-button" onclick="window.location.href = 'settings.html'">Settings</button>
+    </div>
+  </div>
+
+  <!-- all different budget category fields -->
+  <div class="container">
+    <div class="budget-grid">
+      <div class="form-row">
+        <label for="rentBudget">Mortgage / Rent</label>
+        <input type="number" id="rentBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="foodBudget">Groceries & Food</label>
+        <input type="number" id="foodBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="billsBudget">Bills</label>
+        <input type="number" id="billsBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="transportBudget">Transport</label>
+        <input type="number" id="transportBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="fitnessBudget">Health & Fitness</label>
+        <input type="number" id="fitnessBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="childcareBudget">Childcare</label>
+        <input type="number" id="childcareBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="educationBudget">Education</label>
+        <input type="number" id="educationBudget" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+
+      <div class="form-row">
+        <label for="entertainmentBudget">Entertainment</label>
+        <input type="number" id="entertainmentBudget" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+
+      <div class="form-row">
+        <label for="savingsBudget">Savings</label>
+        <input type="number" id="savingsBudget" min="0" step="0.01" placeholder="0.00" />
+      </div>
+
+      <div class="form-row">
+        <label for="travelBudget">Travel</label>
+        <input type="number" id="travelBudget" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+
+      <div class="form-row">
+        <label for="otherBudget">Other</label>
+        <input type="number" id="otherBudget" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+    </div>
+
+    <button class="save-button" onclick="saveBudgets()">Save</button>
+  </div>
+
+  <!-- javascript -->
+  <script>
+    function loadBudgets() {
+      const saved = localStorage.getItem("budgets");
+      if (!saved) return;
+
+      // categories
+      const budgets = JSON.parse(saved);
+      document.getElementById("rentBudget").value = budgets["Mortgage / Rent"] || "";
+      document.getElementById("foodBudget").value = budgets["Groceries & Food"] || "";
+      document.getElementById("billsBudget").value = budgets["Bills"] || "";
+      document.getElementById("transportBudget").value = budgets["Transport"] || "";
+      document.getElementById("fitnessBudget").value = budgets["Health & Fitness"] || "";
+      document.getElementById("childcareBudget").value = budgets["Childcare"] || "";
+      document.getElementById("educationBudget").value = budgets["Education"] || "";
+      document.getElementById("entertainmentBudget").value = budgets["Entertainment"] || "";
+      document.getElementById("savingsBudget").value = budgets["Savings"] || "";
+      document.getElementById("travelBudget").value = budgets["Travel"] || "";
+      document.getElementById("otherBudget").value = budgets["Other"] || "";
+    }
+
+    // saving
+    function saveBudgets() {
+      const budgets = {
+        "Mortgage / Rent": parseFloat(document.getElementById("rentBudget").value) || 0,
+        "Groceries & Food": parseFloat(document.getElementById("foodBudget").value) || 0,
+        "Bills": parseFloat(document.getElementById("billsBudget").value) || 0,
+        "Transport": parseFloat(document.getElementById("transportBudget").value) || 0,
+        "Health & Fitness": parseFloat(document.getElementById("fitnessBudget").value) || 0,
+        "Childcare": parseFloat(document.getElementById("childcareBudget").value) || 0,
+        "Education": parseFloat(document.getElementById("educationBudget").value) || 0,
+        "Entertainment": parseFloat(document.getElementById("entertainmentBudget").value) || 0,
+        "Savings": parseFloat(document.getElementById("savingsBudget").value) || 0,
+        "Travel": parseFloat(document.getElementById("travelBudget").value) || 0,
+        "Other": parseFloat(document.getElementById("otherBudget").value) || 0
+      };
+
+      localStorage.setItem("budgets", JSON.stringify(budgets));
+    }
+
+    window.onload = loadBudgets;
+  </script>
+</body>
+</html>
